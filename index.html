@@ -589,11 +589,15 @@ function setSyncStatus(s) {
 
 function saveTick(key, val) {
   setSyncStatus('saving');
-  const update = {};
-  update['ticks/' + key] = val || null;
-  window._fbUpdate(dbRef(''), update)
+  const r = window._fbRef(window._fbDb, 'ticks/' + key);
+  window._fbSet(r, val ? true : null)
     .then(() => setSyncStatus('ok'))
-    .catch(() => setSyncStatus('err'));
+    .catch(err => {
+      console.error('Firebase write error:', err.code, err.message);
+      setSyncStatus('err');
+      const lbl = document.getElementById('syncLabel');
+      if (lbl) lbl.textContent = 'write failed — check Firebase rules';
+    });
 }
 
 function saveConfig() {
@@ -808,6 +812,11 @@ function render() {
   if (!cfg) return;
   document.getElementById('weekLabel').textContent  = getWeekLabel(weekOffset);
   document.getElementById('nextWeek').disabled      = weekOffset >= 0;
+  // Parents can edit past weeks; show hint if on past week in parent mode
+  const retroBanner = document.getElementById('retroBanner');
+  if (retroBanner) {
+    retroBanner.style.display = (isParent && weekOffset < 0) ? 'flex' : 'none';
+  }
   renderNav();
   renderContent();
 }
@@ -891,12 +900,13 @@ function renderTracker() {
   const ro    = !isParent;
 
   const banner = ro ? `<div class="readonly-banner">👀 Read-only view — parents can unlock to edit</div>` : '';
+  const retroNote = (!ro && weekOffset < 0) ? `<div class="readonly-banner" style="background:var(--gold-pale);border-color:rgba(200,144,26,.3);color:var(--gold)" id="retroBanner">✏️ Editing past week — changes save live</div>` : `<div id="retroBanner" style="display:none"></div>`;
 
   const pb = isPet
     ? `<div class="payout-badge pet"><div class="pb-lbl">Weekly score</div><div class="pb-val">${wk.pct}%</div></div>`
     : `<div class="payout-badge"><div class="pb-lbl">Payout so far</div><div class="pb-val">S$${wk.payout.toFixed(2)}</div></div>`;
 
-  let html = `${banner}
+  let html = `${banner}${retroNote}
   <div class="tracker-header">
     <div>
       <div class="tracker-name">${ch.name}${isPet?' 🐾':''}</div>
@@ -1118,6 +1128,10 @@ function resetTicks() {
 // ── WEEK NAV ──
 document.getElementById('prevWeek').addEventListener('click', ()=>{ weekOffset--; render(); });
 document.getElementById('nextWeek').addEventListener('click', ()=>{ if(weekOffset<0){ weekOffset++; render(); } });
+
+// Re-render nav when parent mode changes so next button state updates
+const _origUpdateLockUI = updateLockUI;
+updateLockUI = function() { _origUpdateLockUI(); render(); };
 
 // ── BOOT ──
 if (window._fbReady) {
