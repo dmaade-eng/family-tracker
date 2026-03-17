@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<!-- saved from url=(0060)file:///Users/derrynmaade/Downloads/pocket-money-live_1.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!--
+╔══════════════════════════════════════════════════════════════╗
+║           FAMILY POCKET MONEY TRACKER — SETUP GUIDE         ║
+╠══════════════════════════════════════════════════════════════╣
+║                                                              ║
+║  STEP 1 — CREATE FIREBASE PROJECT (free, 5 mins)            ║
+║  ─────────────────────────────────────────────────           ║
+║  1. Go to: console.firebase.google.com                       ║
+║  2. Click "Add project" → name it (e.g. "family-tracker")   ║
+║  3. Disable Google Analytics (not needed) → Create project  ║
+║  4. Click "</> Web" to add a web app                         ║
+║  5. Give it a nickname → click "Register app"               ║
+║  6. Copy the firebaseConfig object shown on screen          ║
+║  7. Paste it below, replacing the PASTE YOUR CONFIG section  ║
+║                                                              ║
+║  STEP 2 — ENABLE REALTIME DATABASE                          ║
+║  ─────────────────────────────────────────────────           ║
+║  1. In Firebase console → Build → Realtime Database          ║
+║  2. Click "Create Database"                                  ║
+║  3. Choose a location (Singapore / asia-southeast1)          ║
+║  4. Start in TEST MODE (you can lock it down later)          ║
+║  5. Copy the Database URL (looks like:                       ║
+║     https://your-project-default-rtdb.asia-southeast1       ║
+║     .firebasedatabase.app)                                   ║
+║  6. Paste it into the FIREBASE_DB_URL variable below        ║
+║                                                              ║
+║  STEP 3 — DEPLOY TO NETLIFY (free, 2 mins)                  ║
+║  ─────────────────────────────────────────────────           ║
+║  1. Go to: netlify.com → sign up free                        ║
+║  2. On your dashboard, drag this HTML file into the          ║
+║     "drag and drop" zone                                     ║
+║  3. Netlify gives you a URL like yourname.netlify.app        ║
+║  4. Share that URL with the family!                          ║
+║                                                              ║
+║  STEP 4 — CHANGE YOUR PIN                                    ║
+║  ─────────────────────────────────────────────────           ║
+║  Open the app → tap the 🔒 icon → enter 1234                ║
+║  → go to Settings → change your PIN there                    ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+-->
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Family Tracker 🌴</title>
+<link href="./Family Tracker 🌴_files/css2" rel="stylesheet">
+
+<!-- ═══════════════════════════════════════════════ -->
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, set, get, onValue, update }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  // ── REPLACE THIS BLOCK WITH YOUR CONFIG ──
+  const firebaseConfig = {
+    apiKey: "AIzaSyDF7iP4HxN8uHBWXxrd4gUGXcg_Aj4MvyA",
+    authDomain: "pocket-money-9dfe8.firebaseapp.com",
+    databaseURL: "https://pocket-money-9dfe8-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "pocket-money-9dfe8",
+    storageBucket: "pocket-money-9dfe8.firebasestorage.app",
+    messagingSenderId: "884874896852",
+    appId: "1:884874896852:web:5446da55b9747992686241"
+  };
+  // ─────────────────────────────────────────
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getDatabase(app);
+
+  // Expose to global scope for the rest of the app
+  window._fbDb    = db;
+  window._fbRef   = ref;
+  window._fbSet   = set;
+  window._fbGet   = get;
+  window._fbOnValue = onValue;
+  window._fbUpdate  = update;
+  window._fbReady = true;
+  window.dispatchEvent(new Event('firebase-ready'));
+</script>
+
+<style>
+:root {
+  --sand:       #F5EED8;
+  --sand-dark:  #E8D9B0;
+  --sand-deep:  #C9B98A;
+  --bark:       #5C3D2E;
+  --bark-light: #8B6150;
+  --bark-pale:  #D4B896;
+  --palm:       #2D5A27;
+  --palm-light: #4A8042;
+  --palm-pale:  #C8DDB5;
+  --ocean:      #1A6B8A;
+  --ocean-light:#3A9BBF;
+  --ocean-pale: #C2E0EE;
+  --coral:      #E07040;
+  --coral-light:#F5A070;
+  --coral-pale: #FAD8C8;
+  --gold:       #C8901A;
+  --gold-light: #F0B84A;
+  --gold-pale:  #FAECC8;
+  --white:      #FFFDF5;
+  --text:       #2C1810;
+  --text-mid:   #6B4535;
+  --text-soft:  #9B7060;
+  --border:     rgba(92,61,46,0.15);
+  --border-mid: rgba(92,61,46,0.28);
+  --r:          12px;
+  --r-sm:       8px;
+  --sh:         0 2px 12px rgba(92,61,46,0.10);
+  --sh-lg:      0 6px 28px rgba(92,61,46,0.14);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow-x:hidden}
+body{font-family:'DM Sans',sans-serif;background:var(--sand);color:var(--text);
+  background-image:
+    radial-gradient(ellipse at 8% 15%,rgba(45,90,39,.06) 0%,transparent 55%),
+    radial-gradient(ellipse at 92% 85%,rgba(26,107,138,.07) 0%,transparent 55%),
+    radial-gradient(ellipse at 55% 50%,rgba(200,144,26,.04) 0%,transparent 65%);
+}
+
+/* ── HEADER ── */
+.app-header{
+  background:var(--bark);
+  padding:14px 20px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:10px;
+  position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 12px rgba(0,0,0,.2);
+}
+.app-header::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(-45deg,transparent,transparent 8px,
+    rgba(255,255,255,.012) 8px,rgba(255,255,255,.012) 9px);
+}
+.header-left h1{
+  font-family:'Playfair Display',serif;font-size:20px;
+  color:var(--sand);font-weight:600;letter-spacing:.3px;
+}
+.header-left p{font-size:11px;color:var(--bark-pale);margin-top:1px;
+  font-weight:300;letter-spacing:1px;text-transform:uppercase}
+
+.header-right{display:flex;align-items:center;gap:10px;position:relative;z-index:1}
+
+.week-nav{display:flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,.08);border:0.5px solid rgba(255,255,255,.15);
+  border-radius:var(--r);padding:5px 10px}
+.week-nav button{background:transparent;border:none;color:var(--sand);
+  cursor:pointer;font-size:15px;padding:2px 5px;border-radius:6px;transition:background .15s}
+.week-nav button:hover{background:rgba(255,255,255,.12)}
+.week-nav button:disabled{opacity:.3;cursor:default}
+.week-nav span{font-size:12px;color:var(--sand);min-width:95px;text-align:center;font-weight:300}
+
+.lock-btn{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,.1);border:0.5px solid rgba(255,255,255,.2);
+  border-radius:var(--r);padding:6px 12px;cursor:pointer;
+  font-size:13px;color:var(--sand);font-family:'DM Sans',sans-serif;
+  transition:background .15s;position:relative;z-index:1;
+}
+.lock-btn:hover{background:rgba(255,255,255,.18)}
+.lock-btn.unlocked{background:rgba(45,90,39,.35);border-color:rgba(200,220,170,.4)}
+.lock-icon{font-size:14px}
+
+/* ── PIN MODAL ── */
+.modal-backdrop{
+  position:fixed;inset:0;background:rgba(44,24,16,.55);
+  display:flex;align-items:center;justify-content:center;
+  z-index:999;padding:20px;
+}
+.modal{
+  background:var(--white);border-radius:var(--r);
+  padding:2rem;max-width:320px;width:100%;
+  box-shadow:var(--sh-lg);text-align:center;
+}
+.modal h3{font-family:'Playfair Display',serif;font-size:20px;color:var(--bark);margin-bottom:.5rem}
+.modal p{font-size:13px;color:var(--text-soft);margin-bottom:1.5rem}
+.pin-dots{display:flex;justify-content:center;gap:12px;margin-bottom:1.5rem}
+.pin-dot{
+  width:16px;height:16px;border-radius:50%;
+  border:2px solid var(--border-mid);background:transparent;transition:all .2s;
+}
+.pin-dot.filled{background:var(--bark);border-color:var(--bark)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1rem}
+.pin-key{
+  padding:14px;border:1px solid var(--border-mid);border-radius:var(--r-sm);
+  background:var(--sand);cursor:pointer;font-size:18px;font-weight:500;
+  color:var(--text);transition:background .1s,transform .1s;
+  font-family:'DM Sans',sans-serif;
+}
+.pin-key:hover{background:var(--sand-dark)}
+.pin-key:active{transform:scale(.95)}
+.pin-key.del{font-size:14px;color:var(--text-soft)}
+.pin-error{color:var(--coral);font-size:13px;min-height:20px}
+.modal-cancel{
+  margin-top:.75rem;background:transparent;border:none;
+  color:var(--text-soft);font-size:13px;cursor:pointer;
+  font-family:'DM Sans',sans-serif;text-decoration:underline;
+}
+
+/* ── NAV ── */
+.nav{
+  background:var(--white);border-bottom:1px solid var(--border);
+  display:flex;padding:0 16px;gap:0;overflow-x:auto;
+  -webkit-overflow-scrolling:touch;position:sticky;top:56px;z-index:90;
+  scrollbar-width:none;
+}
+.nav::-webkit-scrollbar{display:none}
+.nav-btn{
+  background:transparent;border:none;
+  border-bottom:2.5px solid transparent;
+  padding:11px 14px;
+  font-family:'DM Sans',sans-serif;font-size:13px;font-weight:400;
+  color:var(--text-soft);cursor:pointer;white-space:nowrap;
+  transition:color .15s,border-color .15s;flex-shrink:0;
+}
+.nav-btn:hover{color:var(--bark)}
+.nav-btn.active{color:var(--bark);font-weight:500;border-bottom-color:var(--coral)}
+.nav-btn.dash-tab{color:var(--gold)}
+.nav-btn.dash-tab.active{border-bottom-color:var(--gold);color:var(--gold)}
+.nav-btn .week-sub{font-size:10px;display:block;margin-top:1px;font-weight:500}
+.nav-btn.active .week-sub{color:var(--palm)}
+.nav-btn.dash-tab.active .week-sub{color:var(--gold)}
+
+/* ── MAIN ── */
+.main{max-width:900px;margin:0 auto;padding:1.5rem 1.25rem 3rem}
+
+/* ── READ-ONLY BANNER ── */
+.readonly-banner{
+  background:var(--ocean-pale);border:1px solid rgba(26,107,138,.25);
+  border-radius:var(--r-sm);padding:10px 14px;
+  font-size:13px;color:var(--ocean);margin-bottom:1.25rem;
+  display:flex;align-items:center;gap:8px;
+}
+
+/* ── SECTION HEADINGS ── */
+.section-title{
+  font-family:'Playfair Display',serif;font-size:22px;
+  color:var(--bark);margin-bottom:.25rem;font-weight:600;
+}
+.section-sub{font-size:13px;color:var(--text-soft);margin-bottom:1.25rem;font-weight:300}
+
+/* ── SUMMARY CARDS ── */
+.summary-cards{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:10px;margin-bottom:1.5rem;
+}
+.scard{background:var(--white);border:1px solid var(--border);
+  border-radius:var(--r);padding:1rem 1.1rem;box-shadow:var(--sh)}
+.scard-label{font-size:11px;color:var(--text-soft);text-transform:uppercase;
+  letter-spacing:.8px;margin-bottom:5px}
+.scard-value{font-size:22px;font-weight:500;color:var(--text)}
+.scard-value.g{color:var(--palm)}
+.scard-value.a{color:var(--gold)}
+.scard-value.r{color:var(--coral)}
+
+/* ── LEADERBOARD ── */
+.leaderboard{background:var(--white);border:1px solid var(--border);
+  border-radius:var(--r);padding:1.25rem;box-shadow:var(--sh);margin-bottom:1.5rem}
+.leaderboard h3{font-family:'Playfair Display',serif;font-size:16px;
+  color:var(--bark);margin-bottom:1rem}
+.lb-row{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+.lb-row:last-child{margin-bottom:0}
+.lb-av{width:34px;height:34px;border-radius:50%;background:var(--sand-dark);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:500;color:var(--bark);flex-shrink:0;
+  border:1.5px solid var(--bark-pale)}
+.lb-av.pet{background:var(--gold-pale);border-color:var(--gold);color:var(--gold)}
+.lb-name{font-size:13px;font-weight:500;color:var(--text);min-width:62px}
+.lb-track{flex:1;height:8px;background:var(--sand-dark);border-radius:99px;overflow:hidden}
+.lb-fill{height:100%;border-radius:99px;background:var(--palm-light);transition:width .5s ease}
+.lb-fill.pet{background:var(--gold-light)}
+.lb-amt{font-size:13px;font-weight:500;color:var(--palm);min-width:52px;text-align:right}
+.lb-amt.pet{color:var(--gold)}
+
+/* ── TRACKER HEADER ── */
+.tracker-header{display:flex;align-items:flex-start;justify-content:space-between;
+  margin-bottom:1.25rem;flex-wrap:wrap;gap:12px}
+.tracker-name{font-family:'Playfair Display',serif;font-size:22px;
+  color:var(--bark);font-weight:600}
+.tracker-sub{font-size:12px;color:var(--text-soft);margin-top:2px;font-weight:300}
+.payout-badge{
+  text-align:right;background:var(--palm-pale);
+  border:1px solid rgba(45,90,39,.22);border-radius:var(--r);padding:9px 14px;
+}
+.payout-badge .pb-lbl{font-size:11px;color:var(--palm);text-transform:uppercase;letter-spacing:.8px}
+.payout-badge .pb-val{font-size:26px;font-weight:500;color:var(--palm)}
+.payout-badge.pet{background:var(--gold-pale);border-color:rgba(200,144,26,.22)}
+.payout-badge.pet .pb-lbl{color:var(--gold)}
+.payout-badge.pet .pb-val{color:var(--gold)}
+
+/* ── METRICS ROW ── */
+.metrics-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
+  gap:9px;margin-bottom:1.5rem}
+.mcard{background:var(--white);border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:9px 13px}
+.mcard-lbl{font-size:11px;color:var(--text-soft);text-transform:uppercase;
+  letter-spacing:.7px;margin-bottom:3px}
+.mcard-val{font-size:17px;font-weight:500;color:var(--text)}
+.mcard-val.g{color:var(--palm)}.mcard-val.a{color:var(--gold)}.mcard-val.r{color:var(--coral)}
+
+/* ── DAYS GRID ── */
+.days-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;
+  color:var(--text-soft);margin-bottom:8px}
+.days-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:1.5rem}
+.day-col{background:var(--white);border:1px solid var(--border);
+  border-radius:var(--r-sm);overflow:hidden}
+.day-col.today{border-color:var(--ocean-light);border-width:1.5px}
+.day-head{background:var(--sand-dark);padding:6px 3px 4px;text-align:center;
+  border-bottom:1px solid var(--border)}
+.day-head .dn{font-size:11px;font-weight:500;color:var(--bark)}
+.day-head .ds{font-size:9px;color:var(--palm);font-weight:500;margin-top:1px}
+.day-head .ds.neg{color:var(--coral)}
+.day-tasks{padding:5px 3px;display:flex;flex-direction:column;align-items:center;gap:3px}
+.tbtn{
+  width:30px;height:30px;border-radius:50%;
+  border:1.5px solid var(--border-mid);background:transparent;
+  cursor:pointer;font-size:12px;font-weight:500;color:var(--text-soft);
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;touch-action:manipulation;
+}
+.tbtn:hover{border-color:var(--bark-pale);background:var(--sand)}
+.tbtn.done{background:var(--palm-pale);border-color:var(--palm-light);color:var(--palm)}
+.tbtn.bonus{background:var(--gold-pale);border-color:var(--gold-light);color:var(--gold)}
+.tbtn.pen{background:var(--coral-pale);border-color:var(--coral-light);color:var(--coral)}
+.tbtn.readonly{cursor:default}
+.tbtn.readonly:hover{border-color:var(--border-mid);background:transparent}
+.tbtn.done.readonly{background:var(--palm-pale);border-color:var(--palm-light)}
+.tbtn.bonus.readonly{background:var(--gold-pale);border-color:var(--gold-light)}
+.tbtn.pen.readonly{background:var(--coral-pale);border-color:var(--coral-light)}
+.tdivider{width:70%;height:1px;background:var(--border);margin:2px 0}
+
+/* ── LEGEND ── */
+.legend-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:1.5rem}
+@media(max-width:480px){.legend-grid{grid-template-columns:1fr}}
+.lsec h4{font-size:11px;text-transform:uppercase;letter-spacing:.8px;
+  color:var(--text-soft);margin-bottom:7px}
+.lrow{display:flex;align-items:center;gap:8px;padding:7px 10px;
+  background:var(--white);border:1px solid var(--border);
+  border-radius:var(--r-sm);margin-bottom:5px}
+.lrow.penrow{border-color:var(--coral-pale);background:#fffaf8}
+.l-icon{font-size:15px;width:20px;text-align:center}
+.l-info{flex:1}.l-name{font-size:13px;font-weight:500;color:var(--text)}
+.l-desc{font-size:11px;color:var(--text-soft)}
+.l-val{font-size:12px;font-weight:500;min-width:34px;text-align:right}
+.l-val.g{color:var(--palm)}.l-val.r{color:var(--coral)}.l-val.a{color:var(--gold)}
+
+/* ── PAYOUT CARD ── */
+.payout-card{background:var(--white);border:1px solid var(--border);
+  border-radius:var(--r);padding:1.25rem;box-shadow:var(--sh);margin-bottom:1.5rem}
+.payout-card h4{font-family:'Playfair Display',serif;font-size:16px;
+  color:var(--bark);margin-bottom:12px}
+.pc-row{display:flex;justify-content:space-between;font-size:13px;
+  color:var(--text-soft);padding:6px 0;border-bottom:1px solid var(--border)}
+.pc-total{display:flex;justify-content:space-between;font-size:16px;
+  font-weight:500;color:var(--text);padding:10px 0 0}
+
+/* ── PET ── */
+.pet-card{background:var(--gold-pale);border:1px solid rgba(200,144,26,.25);
+  border-radius:var(--r);padding:1.25rem;margin-bottom:1.5rem}
+.pet-card h4{font-family:'Playfair Display',serif;font-size:16px;
+  color:var(--gold);margin-bottom:12px}
+.pet-bar-wrap{height:11px;background:rgba(200,144,26,.15);
+  border-radius:99px;overflow:hidden;margin:6px 0 4px}
+.pet-bar-fill{height:100%;border-radius:99px;background:var(--gold-light);transition:width .5s}
+.pet-verdict{font-size:12px;color:var(--bark-light);margin-top:4px;font-style:italic}
+
+/* ── SETTINGS ── */
+.settings-sec{margin-bottom:2rem}
+.settings-sec h3{font-family:'Playfair Display',serif;font-size:18px;
+  color:var(--bark);margin-bottom:3px}
+.s-note{font-size:12px;color:var(--text-soft);margin-bottom:10px}
+.s-row{display:flex;align-items:center;gap:8px;padding:8px 13px;
+  background:var(--white);border:1px solid var(--border);
+  border-radius:var(--r-sm);margin-bottom:5px}
+.s-row label{flex:1;font-size:13px;color:var(--text)}
+.s-row input[type=number]{width:64px;padding:4px 7px;font-size:13px;
+  border:1px solid var(--border-mid);border-radius:6px;
+  background:var(--sand);color:var(--text);font-family:'DM Sans',sans-serif}
+.s-row input[type=text],.s-row input[type=password]{width:110px;padding:4px 7px;
+  font-size:13px;border:1px solid var(--border-mid);border-radius:6px;
+  background:var(--sand);color:var(--text);font-family:'DM Sans',sans-serif}
+.pct-pill{font-size:11px;padding:2px 8px;border-radius:99px;
+  background:var(--ocean-pale);color:var(--ocean);min-width:36px;text-align:center}
+.pct-pill.r{background:var(--coral-pale);color:var(--coral)}
+.danger-btn{padding:6px 14px;background:var(--coral-pale);
+  border:1px solid var(--coral-light);border-radius:8px;color:var(--coral);
+  font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif}
+
+/* ── SYNC STATUS ── */
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--gold);
+  display:inline-block;margin-right:5px;transition:background .3s}
+.sync-dot.ok{background:#6abf69}
+.sync-dot.err{background:var(--coral)}
+
+/* ── LOADING ── */
+#loading{position:fixed;inset:0;background:var(--sand);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:9999;gap:16px}
+#loading h2{font-family:'Playfair Display',serif;font-size:24px;color:var(--bark)}
+#loading p{font-size:13px;color:var(--text-soft)}
+.spinner{width:36px;height:36px;border:3px solid var(--sand-dark);
+  border-top-color:var(--bark);border-radius:50%;
+  animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── MOBILE ── */
+@media(max-width:600px){
+  .main{padding:1rem .9rem 3rem}
+  .days-grid{gap:4px}
+  .tbtn{width:26px;height:26px;font-size:11px}
+  .summary-cards{grid-template-columns:1fr 1fr}
+  .scard-value{font-size:19px}
+  .tracker-name{font-size:19px}
+  .payout-badge .pb-val{font-size:22px}
+  .week-nav span{min-width:80px;font-size:11px}
+  .app-header{padding:10px 14px}
+  .header-left h1{font-size:17px}
+  .metrics-row{grid-template-columns:1fr 1fr}
+  .lock-btn span.lock-text{display:none}
+}
+
+.page-footer{text-align:center;padding:1.5rem 0 1rem;
+  font-size:11px;color:var(--text-soft);letter-spacing:.5px}
+</style>
+</head>
+<body>
+
+<div id="loading"><div style="text-align:center;padding:2rem;max-width:400px">
+          <h2 style="font-family:&#39;Playfair Display&#39;,serif;color:var(--bark);margin-bottom:1rem">Firebase not configured</h2>
+          <p style="font-size:14px;color:var(--text-soft);line-height:1.7">
+            Open this file in a text editor and follow the setup instructions at the top of the file to connect Firebase.<br><br>
+            The setup takes about 5 minutes and is completely free.
+          </p>
+        </div></div>
+
+<!-- ── HEADER ── -->
+<div class="app-header" id="appHeader" style="display:none">
+  <div class="header-left">
+    <h1>🌴 Family Tracker</h1>
+    <p><span class="sync-dot" id="syncDot"></span><span id="syncLabel">connecting</span></p>
+  </div>
+  <div class="header-right">
+    <div class="week-nav">
+      <button id="prevWeek">←</button>
+      <span id="weekLabel">This week</span>
+      <button id="nextWeek" disabled="">→</button>
+    </div>
+    <button class="lock-btn" id="lockBtn" onclick="handleLockBtn()">
+      <span class="lock-icon" id="lockIcon">🔒</span>
+      <span class="lock-text" id="lockText">Parent login</span>
+    </button>
+  </div>
+</div>
+
+<!-- ── NAV ── -->
+<nav class="nav" id="mainNav" style="display:none"></nav>
+
+<!-- ── MAIN ── -->
+<div class="main" id="mainContent" style="display:none"></div>
+
+<!-- ── PIN MODAL ── -->
+<div class="modal-backdrop" id="pinModal" style="display:none" onclick="handleBackdropClick(event)">
+  <div class="modal">
+    <h3 id="pinTitle">Parent access</h3>
+    <p id="pinSubtitle">Enter your 4-digit PIN to unlock editing</p>
+    <div class="pin-dots" id="pinDots">
+      <div class="pin-dot" id="pd0"></div>
+      <div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div>
+      <div class="pin-dot" id="pd3"></div>
+    </div>
+    <div class="pin-pad">
+      <button class="pin-key" onclick="pinKey(&#39;1&#39;)">1</button>
+      <button class="pin-key" onclick="pinKey(&#39;2&#39;)">2</button>
+      <button class="pin-key" onclick="pinKey(&#39;3&#39;)">3</button>
+      <button class="pin-key" onclick="pinKey(&#39;4&#39;)">4</button>
+      <button class="pin-key" onclick="pinKey(&#39;5&#39;)">5</button>
+      <button class="pin-key" onclick="pinKey(&#39;6&#39;)">6</button>
+      <button class="pin-key" onclick="pinKey(&#39;7&#39;)">7</button>
+      <button class="pin-key" onclick="pinKey(&#39;8&#39;)">8</button>
+      <button class="pin-key" onclick="pinKey(&#39;9&#39;)">9</button>
+      <button class="pin-key del" onclick="pinKey(&#39;del&#39;)">⌫</button>
+      <button class="pin-key" onclick="pinKey(&#39;0&#39;)">0</button>
+      <button class="pin-key del" onclick="pinKey(&#39;clr&#39;)">CLR</button>
+    </div>
+    <div class="pin-error" id="pinError"></div>
+    <button class="modal-cancel" onclick="closePin()">Cancel</button>
+  </div>
+</div>
+
+<div class="page-footer" id="pageFooter" style="display:none">
+  Bali vibes · data syncs live via Firebase
+</div>
+
+<script>
+// ═══════════════════════════════════════
+//  DEFAULTS
+// ═══════════════════════════════════════
+const DEFAULT_CONFIG = {
+  pin: '1234',
+  children: [
+    { name:'Chelsea', base:10, isPet:false },
+    { name:'Troy',    base:10, isPet:false },
+    { name:'Sienna',  base:10, isPet:false },
+    { name:'Dash',    base:0,  isPet:true  }
+  ],
+  tasks: [
+    { id:'t1', name:'Morning routine',    desc:'Up, dressed, bag ready on time',  pct:10, type:'core',  icon:'☀️' },
+    { id:'t2', name:'Homework done',      desc:'Completed before screens',         pct:15, type:'core',  icon:'📚' },
+    { id:'t3', name:'Tidy room',          desc:'Room tidy before dinner',          pct:10, type:'core',  icon:'🏠' },
+    { id:'t4', name:'Screen time limits', desc:'Off devices by agreed time',       pct:10, type:'core',  icon:'📵' },
+    { id:'t5', name:'Kind to siblings',   desc:'No fighting, no drama',            pct:5,  type:'core',  icon:'🤝' },
+    { id:'t6', name:'Extra chore',        desc:'Vacuum, laundry fold, bins etc',   pct:10, type:'bonus', icon:'⭐' },
+    { id:'t7', name:'Helped with dinner', desc:'Set table or helped cook',         pct:8,  type:'bonus', icon:'🍽️' }
+  ],
+  penalties: [
+    { id:'p1', name:'Rude or disrespectful',     pct:10, icon:'🚫' },
+    { id:'p2', name:'Lied to a parent',           pct:15, icon:'⚡' },
+    { id:'p3', name:'Left a mess after warning',  pct:5,  icon:'🗑️' }
+  ],
+  petTasks: [
+    { id:'pet1', name:'Remembered my walk',      desc:'Someone walked me — good human', type:'core',  icon:'🦮' },
+    { id:'pet2', name:'Fed on time',              desc:'Meals arrived promptly',          type:'core',  icon:'🍖' },
+    { id:'pet3', name:'Did not steal food',       desc:'Heroic self-control exhibited',  type:'core',  icon:'🥩' },
+    { id:'pet4', name:'No zoomies indoors',       desc:'Contained the chaos admirably',  type:'core',  icon:'🌀' },
+    { id:'pet5', name:'Excellent boy',            desc:'General tail wags and good vibes',type:'bonus',icon:'🏆' },
+    { id:'pet6', name:'Did not eat the homework', desc:'Showed remarkable restraint',    type:'bonus', icon:'📄' }
+  ],
+  bonusCap:   20,
+  penaltyCap: 20
+};
+
+// ═══════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════
+let cfg        = null;   // config (synced from Firebase)
+let ticks      = {};     // { weekKey_childIdx_day_taskId: true }
+let weekOffset = 0;
+let isParent   = false;
+let activeTab  = 'dashboard';
+let activeChild= 0;
+let fbReady    = false;
+let syncPending= false;
+
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+// ═══════════════════════════════════════
+//  FIREBASE HELPERS
+// ═══════════════════════════════════════
+function dbRef(path) { return window._fbRef(window._fbDb, path); }
+
+function initFirebase() {
+  const db = window._fbDb;
+
+  // Listen to config
+  window._fbOnValue(dbRef('config'), snap => {
+    if (snap.exists()) {
+      cfg = snap.val();
+    } else {
+      cfg = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+      window._fbSet(dbRef('config'), cfg);
+    }
+    maybeRender();
+  });
+
+  // Listen to ticks
+  window._fbOnValue(dbRef('ticks'), snap => {
+    ticks = snap.exists() ? snap.val() : {};
+    maybeRender();
+  });
+}
+
+let _cfgLoaded   = false;
+let _ticksLoaded = false;
+function maybeRender() {
+  // Count how many times we've heard back
+  if (!cfg) return;
+  showApp();
+  render();
+  setSyncStatus('ok');
+}
+
+function setSyncStatus(s) {
+  const dot   = document.getElementById('syncDot');
+  const label = document.getElementById('syncLabel');
+  if (s === 'ok') { dot.className='sync-dot ok'; label.textContent='live'; }
+  else if (s === 'saving') { dot.className='sync-dot'; label.textContent='saving…'; }
+  else { dot.className='sync-dot err'; label.textContent='offline'; }
+}
+
+function saveTick(key, val) {
+  setSyncStatus('saving');
+  const update = {};
+  update['ticks/' + key] = val || null;
+  window._fbUpdate(dbRef(''), update)
+    .then(() => setSyncStatus('ok'))
+    .catch(() => setSyncStatus('err'));
+}
+
+function saveConfig() {
+  setSyncStatus('saving');
+  window._fbSet(dbRef('config'), cfg)
+    .then(() => setSyncStatus('ok'))
+    .catch(() => setSyncStatus('err'));
+}
+
+function showApp() {
+  document.getElementById('loading').style.display    = 'none';
+  document.getElementById('appHeader').style.display  = 'flex';
+  document.getElementById('mainNav').style.display    = 'flex';
+  document.getElementById('mainContent').style.display= 'block';
+  document.getElementById('pageFooter').style.display = 'block';
+}
+
+// ═══════════════════════════════════════
+//  WEEK HELPERS
+// ═══════════════════════════════════════
+function getWeekKey(offset) {
+  const now = new Date();
+  const dow = now.getDay() === 0 ? 6 : now.getDay() - 1;
+  const mon = new Date(now);
+  mon.setDate(now.getDate() - dow + offset * 7);
+  return mon.toISOString().slice(0,10);
+}
+
+function getWeekLabel(offset) {
+  const now = new Date();
+  const dow = now.getDay() === 0 ? 6 : now.getDay() - 1;
+  const mon = new Date(now);
+  mon.setDate(now.getDate() - dow + offset * 7);
+  const sun = new Date(mon);
+  sun.setDate(mon.getDate() + 6);
+  const f = d => d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+  if (offset === 0) return 'This week';
+  if (offset === -1) return 'Last week';
+  return f(mon) + ' – ' + f(sun);
+}
+
+function getTodayDayIndex() {
+  const d = new Date().getDay();
+  return d === 0 ? 6 : d - 1;
+}
+
+function tickKey(ci, wo, day, tid) {
+  return `${getWeekKey(wo)}_${ci}_${day}_${tid}`;
+}
+function getTick(ci, wo, day, tid) { return !!ticks[tickKey(ci,wo,day,tid)]; }
+
+function doToggle(ci, wo, day, tid) {
+  if (!isParent) return;
+  const k   = tickKey(ci, wo, day, tid);
+  const val = !ticks[k];
+  ticks[k]  = val;
+  saveTick(k, val || null);
+  render();
+}
+
+// ═══════════════════════════════════════
+//  CALC ENGINE
+// ═══════════════════════════════════════
+function calcDay(ci, wo, dayIdx) {
+  const child = cfg.children[ci];
+  if (child.isPet) return { net:0, daily:0, coreMissedPct:0, bonusPct:0, penPct:0 };
+  const daily = child.base / 7;
+  const day   = DAYS[dayIdx];
+  const core  = cfg.tasks.filter(t => t.type === 'core');
+  const bonus = cfg.tasks.filter(t => t.type === 'bonus');
+  const totalCorePct = core.reduce((s,t) => s+t.pct, 0);
+  let coreEarned=0, bonusRaw=0, penRaw=0;
+  core.forEach(t  => { if (getTick(ci,wo,day,t.id)) coreEarned += t.pct; });
+  bonus.forEach(t => { if (getTick(ci,wo,day,t.id)) bonusRaw   += t.pct; });
+  cfg.penalties.forEach(p => { if (getTick(ci,wo,day,p.id)) penRaw += p.pct; });
+  const coreMissedPct = totalCorePct - coreEarned;
+  const bonusPct = Math.min(bonusRaw, cfg.bonusCap);
+  const penPct   = Math.min(penRaw,   cfg.penaltyCap);
+  const net = Math.max(0, daily * (1 - coreMissedPct/100 + bonusPct/100 - penPct/100));
+  return { net, daily, coreMissedPct, bonusPct, penPct };
+}
+
+function calcWeek(ci, wo) {
+  const child = cfg.children[ci];
+  if (child.isPet) {
+    const all = cfg.petTasks;
+    let done=0, total=all.length*7;
+    DAYS.forEach(day => all.forEach(t => { if (getTick(ci,wo,day,t.id)) done++; }));
+    return { payout:0, pct: total>0?Math.round(done/total*100):0, penaltyTotal:0, bonusEarned:0, coreMissed:0 };
+  }
+  let payout=0, penaltyTotal=0, bonusEarned=0, coreMissed=0;
+  const daily = child.base/7;
+  DAYS.forEach((_,i) => {
+    const ds = calcDay(ci, wo, i);
+    payout       += ds.net;
+    penaltyTotal += ds.penPct   / 100 * daily;
+    bonusEarned  += ds.bonusPct / 100 * daily;
+    coreMissed   += ds.coreMissedPct / 100 * daily;
+  });
+  return { payout, penaltyTotal, bonusEarned, coreMissed };
+}
+
+function calcAllTime(ci) {
+  if (cfg.children[ci].isPet) return 0;
+  const weeks = new Set(
+    Object.keys(ticks)
+      .filter(k => k.split('_')[1] === String(ci))
+      .map(k => k.split('_')[0])
+  );
+  weeks.add(getWeekKey(weekOffset));
+  let total = 0;
+  weeks.forEach(wk => {
+    DAYS.forEach((day, i) => {
+      const daily = cfg.children[ci].base / 7;
+      const core  = cfg.tasks.filter(t => t.type==='core');
+      const bonus = cfg.tasks.filter(t => t.type==='bonus');
+      const totalCorePct = core.reduce((s,t)=>s+t.pct,0);
+      let coreEarned=0, bonusRaw=0, penRaw=0;
+      const tk = tid => !!ticks[`${wk}_${ci}_${day}_${tid}`];
+      core.forEach(t  => { if(tk(t.id))  coreEarned += t.pct; });
+      bonus.forEach(t => { if(tk(t.id))  bonusRaw   += t.pct; });
+      cfg.penalties.forEach(p=>{ if(tk(p.id)) penRaw += p.pct; });
+      const net = Math.max(0, daily*(1-(totalCorePct-coreEarned)/100
+        +Math.min(bonusRaw,cfg.bonusCap)/100
+        -Math.min(penRaw,cfg.penaltyCap)/100));
+      total += net;
+    });
+  });
+  return total;
+}
+
+// ═══════════════════════════════════════
+//  PIN LOGIC
+// ═══════════════════════════════════════
+let pinBuffer = '';
+
+function handleLockBtn() {
+  if (isParent) {
+    isParent = false;
+    updateLockUI();
+    render();
+  } else {
+    openPin();
+  }
+}
+
+function openPin() {
+  pinBuffer = '';
+  document.getElementById('pinError').textContent = '';
+  updatePinDots();
+  document.getElementById('pinModal').style.display = 'flex';
+}
+
+function closePin() {
+  document.getElementById('pinModal').style.display = 'none';
+  pinBuffer = '';
+}
+
+function handleBackdropClick(e) {
+  if (e.target.id === 'pinModal') closePin();
+}
+
+function pinKey(k) {
+  if (k === 'del') { pinBuffer = pinBuffer.slice(0,-1); }
+  else if (k === 'clr') { pinBuffer = ''; }
+  else if (pinBuffer.length < 4) { pinBuffer += k; }
+  updatePinDots();
+  document.getElementById('pinError').textContent = '';
+  if (pinBuffer.length === 4) checkPin();
+}
+
+function updatePinDots() {
+  for (let i=0;i<4;i++) {
+    document.getElementById('pd'+i).classList.toggle('filled', i < pinBuffer.length);
+  }
+}
+
+function checkPin() {
+  if (pinBuffer === (cfg.pin || DEFAULT_CONFIG.pin)) {
+    isParent = true;
+    closePin();
+    updateLockUI();
+    render();
+  } else {
+    document.getElementById('pinError').textContent = 'Incorrect PIN — try again';
+    pinBuffer = '';
+    updatePinDots();
+    document.getElementById('pinModal').querySelector('.modal').style.animation='shake .3s ease';
+    setTimeout(()=>{ document.getElementById('pinModal').querySelector('.modal').style.animation=''; },300);
+  }
+}
+
+function updateLockUI() {
+  const btn  = document.getElementById('lockBtn');
+  const icon = document.getElementById('lockIcon');
+  const txt  = document.getElementById('lockText');
+  if (isParent) {
+    btn.classList.add('unlocked');
+    icon.textContent = '🔓';
+    txt.textContent  = 'Parent mode';
+  } else {
+    btn.classList.remove('unlocked');
+    icon.textContent = '🔒';
+    txt.textContent  = 'Parent login';
+  }
+}
+
+// ═══════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════
+function render() {
+  if (!cfg) return;
+  document.getElementById('weekLabel').textContent  = getWeekLabel(weekOffset);
+  document.getElementById('nextWeek').disabled      = weekOffset >= 0;
+  renderNav();
+  renderContent();
+}
+
+function renderNav() {
+  const wo = weekOffset;
+  let html = `<button class="nav-btn${activeTab==='dashboard'?' active':''}" onclick="setTab('dashboard')">Dashboard</button>`;
+  cfg.children.forEach((ch,i) => {
+    const wk  = calcWeek(i, wo);
+    const sub = ch.isPet
+      ? `<span class="week-sub">${wk.pct}%</span>`
+      : `<span class="week-sub">S$${wk.payout.toFixed(2)}</span>`;
+    html += `<button class="nav-btn${activeTab==='tracker'&&activeChild===i?' active':''}${ch.isPet?' dash-tab':''}"
+      onclick="setChild(${i})">${ch.name}${sub}</button>`;
+  });
+  if (isParent) {
+    html += `<button class="nav-btn${activeTab==='settings'?' active':''}" onclick="setTab('settings')" style="margin-left:auto">Settings</button>`;
+  }
+  document.getElementById('mainNav').innerHTML = html;
+}
+
+function setTab(t)   { activeTab='dashboard'; if(t==='settings') activeTab='settings'; activeChild=0; activeTab=t; render(); }
+function setChild(i) { activeTab='tracker'; activeChild=i; render(); }
+
+function renderContent() {
+  const el = document.getElementById('mainContent');
+  if      (activeTab === 'dashboard') el.innerHTML = renderDashboard();
+  else if (activeTab === 'settings')  el.innerHTML = renderSettings();
+  else                                el.innerHTML = renderTracker();
+}
+
+// ── DASHBOARD ──
+function renderDashboard() {
+  const wo  = weekOffset;
+  const ats = cfg.children.map((_,i) => calcAllTime(i));
+  const wks = cfg.children.map((_,i) => calcWeek(i, wo));
+  const maxAt = Math.max(...ats.filter((_,i)=>!cfg.children[i].isPet), 0.01);
+  const totalPayout = wks.filter((_,i)=>!cfg.children[i].isPet).reduce((s,w)=>s+w.payout,0);
+  const totalPen    = wks.filter((_,i)=>!cfg.children[i].isPet).reduce((s,w)=>s+w.penaltyTotal,0);
+  const totalBonus  = wks.filter((_,i)=>!cfg.children[i].isPet).reduce((s,w)=>s+w.bonusEarned,0);
+  const petScore    = wks[3] ? wks[3].pct : 0;
+
+  const banner = !isParent ? `<div class="readonly-banner">👀 You're in read-only view — ask a parent to update tasks</div>` : '';
+
+  const lb = cfg.children.map((ch,i) => {
+    const at   = ats[i];
+    const fill = ch.isPet ? petScore : Math.round(at/maxAt*100);
+    const amt  = ch.isPet ? `${petScore}%` : `S$${at.toFixed(2)}`;
+    const init = ch.name.slice(0,2).toUpperCase();
+    return `<div class="lb-row">
+      <div class="lb-av${ch.isPet?' pet':''}">${ch.isPet?'🐾':init}</div>
+      <div class="lb-name">${ch.name}</div>
+      <div class="lb-track"><div class="lb-fill${ch.isPet?' pet':''}" style="width:${fill}%"></div></div>
+      <div class="lb-amt${ch.isPet?' pet':''}">${amt}</div>
+    </div>`;
+  }).join('');
+
+  return `${banner}
+  <p class="section-title">Family overview</p>
+  <p class="section-sub">${getWeekLabel(wo)}</p>
+  <div class="summary-cards">
+    <div class="scard"><div class="scard-label">Total payout this week</div><div class="scard-value g">S$${totalPayout.toFixed(2)}</div></div>
+    <div class="scard"><div class="scard-label">Dash's score</div><div class="scard-value a">${petScore}%</div></div>
+    <div class="scard"><div class="scard-label">Penalties issued</div><div class="scard-value r">-S$${totalPen.toFixed(2)}</div></div>
+    <div class="scard"><div class="scard-label">Bonus earned</div><div class="scard-value a">+S$${totalBonus.toFixed(2)}</div></div>
+  </div>
+  <div class="leaderboard"><h3>All-time earnings</h3>${lb}</div>`;
+}
+
+// ── TRACKER ──
+function renderTracker() {
+  const ci    = activeChild;
+  const ch    = cfg.children[ci];
+  const wo    = weekOffset;
+  const isPet = ch.isPet;
+  const wk    = calcWeek(ci, wo);
+  const daily = ch.base / 7;
+  const todayIdx = wo===0 ? getTodayDayIndex() : -1;
+  const core  = isPet ? cfg.petTasks.filter(t=>t.type==='core')  : cfg.tasks.filter(t=>t.type==='core');
+  const bonus = isPet ? cfg.petTasks.filter(t=>t.type==='bonus') : cfg.tasks.filter(t=>t.type==='bonus');
+  const ro    = !isParent;
+
+  const banner = ro ? `<div class="readonly-banner">👀 Read-only view — parents can unlock to edit</div>` : '';
+
+  const pb = isPet
+    ? `<div class="payout-badge pet"><div class="pb-lbl">Weekly score</div><div class="pb-val">${wk.pct}%</div></div>`
+    : `<div class="payout-badge"><div class="pb-lbl">Payout so far</div><div class="pb-val">S$${wk.payout.toFixed(2)}</div></div>`;
+
+  let html = `${banner}
+  <div class="tracker-header">
+    <div>
+      <div class="tracker-name">${ch.name}${isPet?' 🐾':''}</div>
+      <div class="tracker-sub">${isPet?'Weekly report card':`S$${ch.base}/week · S$${daily.toFixed(2)}/day`}</div>
+    </div>${pb}
+  </div>`;
+
+  // metrics
+  if (!isPet) {
+    html += `<div class="metrics-row">
+      <div class="mcard"><div class="mcard-lbl">Daily budget</div><div class="mcard-val">S$${daily.toFixed(2)}</div></div>
+      <div class="mcard"><div class="mcard-lbl">Bonus earned</div><div class="mcard-val a">+S$${wk.bonusEarned.toFixed(2)}</div></div>
+      <div class="mcard"><div class="mcard-lbl">Penalties</div><div class="mcard-val r">-S$${wk.penaltyTotal.toFixed(2)}</div></div>
+      <div class="mcard"><div class="mcard-lbl">All-time total</div><div class="mcard-val g">S$${calcAllTime(ci).toFixed(2)}</div></div>
+    </div>`;
+  } else {
+    html += `<div class="metrics-row">
+      <div class="mcard"><div class="mcard-lbl">Core tasks</div><div class="mcard-val">${core.reduce((s,t)=>s+DAYS.filter(d=>getTick(ci,wo,d,t.id)).length,0)}/${core.length*7}</div></div>
+      <div class="mcard"><div class="mcard-lbl">Bonus tasks</div><div class="mcard-val a">${bonus.reduce((s,t)=>s+DAYS.filter(d=>getTick(ci,wo,d,t.id)).length,0)}/${bonus.length*7}</div></div>
+      <div class="mcard"><div class="mcard-lbl">Weekly score</div><div class="mcard-val a">${wk.pct}%</div></div>
+    </div>`;
+  }
+
+  // days
+  html += `<div class="days-title">Daily tracker${ro?' (read only)':' — tap to tick'}</div><div class="days-grid">`;
+  DAYS.forEach((day,i) => {
+    const isToday = i === todayIdx;
+    const ds = !isPet ? calcDay(ci,wo,i) : null;
+    let subHtml='';
+    if (!isPet && ds) {
+      const hasAny = [...core,...bonus,...cfg.penalties].some(t=>getTick(ci,wo,day,t.id));
+      if (hasAny) {
+        const diff = +(ds.net - ds.daily).toFixed(2);
+        subHtml = `<div class="ds${diff<0?' neg':''}">${diff>=0?'+':''}${diff.toFixed(2)}</div>`;
+      }
+    }
+    html += `<div class="day-col${isToday?' today':''}">
+      <div class="day-head"><div class="dn">${day}</div>${subHtml}</div>
+      <div class="day-tasks">`;
+
+    core.forEach(t => {
+      const on = getTick(ci,wo,day,t.id);
+      const fn = ro ? '' : `onclick="doToggle(${ci},${wo},'${day}','${t.id}')"`;
+      html += `<button class="tbtn${on?' done':''}${ro?' readonly':''}" title="${t.name}" ${fn}>${on?'✓':''}</button>`;
+    });
+
+    html += `<div class="tdivider"></div>`;
+    bonus.forEach(t => {
+      const on = getTick(ci,wo,day,t.id);
+      const fn = ro ? '' : `onclick="doToggle(${ci},${wo},'${day}','${t.id}')"`;
+      html += `<button class="tbtn${on?' bonus':''}${ro?' readonly':''}" title="${t.name}" ${fn}>${on?'★':''}</button>`;
+    });
+
+    if (!isPet && cfg.penalties.length) {
+      html += `<div class="tdivider"></div>`;
+      cfg.penalties.forEach(p => {
+        const on = getTick(ci,wo,day,p.id);
+        const fn = ro ? '' : `onclick="doToggle(${ci},${wo},'${day}','${p.id}')"`;
+        html += `<button class="tbtn${on?' pen':''}${ro?' readonly':''}" title="${p.name}" ${fn}>${on?'!':''}</button>`;
+      });
+    }
+    html += `</div></div>`;
+  });
+  html += `</div>`;
+
+  // legend
+  html += `<div class="legend-grid">
+    <div class="lsec">
+      <h4>${isPet?'Good behaviour':'Core tasks (daily)'}</h4>
+      ${core.map(t=>`<div class="lrow">
+        <div class="l-icon">${t.icon}</div>
+        <div class="l-info"><div class="l-name">${t.name}</div><div class="l-desc">${t.desc||''}</div></div>
+        ${!isPet?`<div class="l-val g">${t.pct}%</div>`:''}
+      </div>`).join('')}
+    </div>
+    <div class="lsec">
+      <h4>${isPet?'Bonus behaviour':'Bonus + penalty box'}</h4>
+      ${bonus.map(t=>`<div class="lrow">
+        <div class="l-icon">${t.icon}</div>
+        <div class="l-info"><div class="l-name">${t.name}</div><div class="l-desc">${t.desc||''}</div></div>
+        ${!isPet?`<div class="l-val a">+${t.pct}%</div>`:''}
+      </div>`).join('')}
+      ${!isPet?cfg.penalties.map(p=>`<div class="lrow penrow">
+        <div class="l-icon">${p.icon}</div>
+        <div class="l-info"><div class="l-name">${p.name}</div><div class="l-desc">of daily budget</div></div>
+        <div class="l-val r">-${p.pct}%</div>
+      </div>`).join(''):''}
+    </div>
+  </div>`;
+
+  // payout
+  if (!isPet) {
+    html += `<div class="payout-card">
+      <h4>Weekly payout breakdown</h4>
+      <div class="pc-row"><span>Base weekly amount</span><span>S$${ch.base.toFixed(2)}</span></div>
+      <div class="pc-row"><span>Daily rate (÷ 7)</span><span>S$${daily.toFixed(2)}/day</span></div>
+      <div class="pc-row"><span>Missed core tasks</span><span style="color:var(--coral)">-S$${wk.coreMissed.toFixed(2)}</span></div>
+      <div class="pc-row"><span>Bonus earned (cap ${cfg.bonusCap}%/day)</span><span style="color:var(--palm)">+S$${wk.bonusEarned.toFixed(2)}</span></div>
+      <div class="pc-row"><span>Penalties (cap ${cfg.penaltyCap}%/day)</span><span style="color:var(--coral)">-S$${wk.penaltyTotal.toFixed(2)}</span></div>
+      <div class="pc-total"><span>Pay out this week</span><span style="color:var(--palm)">S$${wk.payout.toFixed(2)}</span></div>
+    </div>`;
+  } else {
+    const verdict = wk.pct>=80?'🏆 Outstanding week for Dash!':wk.pct>=60?'👍 Pretty good boy this week.':wk.pct>=40?'😬 Room for improvement, Dash.':'🐾 Dash, we need to talk.';
+    html += `<div class="pet-card">
+      <h4>Dash's report card</h4>
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--gold)">
+        <span>Weekly score</span><span style="font-weight:500">${wk.pct}%</span>
+      </div>
+      <div class="pet-bar-wrap"><div class="pet-bar-fill" style="width:${wk.pct}%"></div></div>
+      <div class="pet-verdict">${verdict}</div>
+    </div>`;
+  }
+  return html;
+}
+
+// ── SETTINGS (parent only) ──
+function renderSettings() {
+  if (!isParent) return `<p style="color:var(--text-soft);font-size:14px">Login as parent to access settings.</p>`;
+  const c = cfg;
+  return `
+  <div class="settings-sec">
+    <h3>Children & weekly base</h3>
+    <div class="s-note">Names and weekly pocket money amounts.</div>
+    ${c.children.filter(ch=>!ch.isPet).map((ch,i)=>`<div class="s-row">
+      <label>${ch.name}</label>
+      <input type="text" value="${ch.name}" onchange="updChildName(${i},this.value)">
+      <span style="font-size:12px;color:var(--text-soft)">S$</span>
+      <input type="number" min="0" step="1" value="${ch.base}" onchange="updChildBase(${i},this.value)">
+    </div>`).join('')}
+  </div>
+  <div class="settings-sec">
+    <h3>Core task weights</h3>
+    <div class="s-note">Deducted from daily budget per day missed.</div>
+    ${c.tasks.filter(t=>t.type==='core').map(t=>{
+      const idx=c.tasks.findIndex(x=>x.id===t.id);
+      return`<div class="s-row">
+        <label>${t.icon} ${t.name}</label>
+        <input type="number" min="0" max="100" step="1" value="${t.pct}" onchange="updTaskPct(${idx},this.value)">
+        <span class="pct-pill">${t.pct}%</span>
+      </div>`;
+    }).join('')}
+  </div>
+  <div class="settings-sec">
+    <h3>Bonus task weights</h3>
+    <div class="s-note">Capped at
+      <input type="number" min="0" max="100" step="5" value="${c.bonusCap}"
+        style="width:44px;font-size:12px;padding:2px 5px;border:1px solid var(--border-mid);border-radius:6px;background:var(--sand);color:var(--text)"
+        onchange="updBonusCap(this.value)">% of daily budget per day.
+    </div>
+    ${c.tasks.filter(t=>t.type==='bonus').map(t=>{
+      const idx=c.tasks.findIndex(x=>x.id===t.id);
+      return`<div class="s-row">
+        <label>${t.icon} ${t.name}</label>
+        <input type="number" min="0" max="100" step="1" value="${t.pct}" onchange="updTaskPct(${idx},this.value)">
+        <span class="pct-pill">${t.pct}%</span>
+      </div>`;
+    }).join('')}
+  </div>
+  <div class="settings-sec">
+    <h3>Penalty box</h3>
+    <div class="s-note">Capped at
+      <input type="number" min="0" max="100" step="5" value="${c.penaltyCap}"
+        style="width:44px;font-size:12px;padding:2px 5px;border:1px solid var(--border-mid);border-radius:6px;background:var(--sand);color:var(--text)"
+        onchange="updPenaltyCap(this.value)">% of daily budget per day.
+    </div>
+    ${c.penalties.map((p,i)=>`<div class="s-row" style="border-color:var(--coral-pale)">
+      <label>${p.icon} ${p.name}</label>
+      <input type="number" min="0" max="100" step="1" value="${p.pct}" onchange="updPenPct(${i},this.value)">
+      <span class="pct-pill r">${p.pct}%</span>
+    </div>`).join('')}
+  </div>
+  <div class="settings-sec">
+    <h3>Parent PIN</h3>
+    <div class="s-note">Change your 4-digit parent PIN.</div>
+    <div class="s-row">
+      <label>New PIN</label>
+      <input type="password" id="newPinInput" maxlength="4" placeholder="4 digits"
+        style="width:90px;letter-spacing:6px;font-size:16px">
+      <button onclick="savePin()" style="padding:5px 12px;background:var(--palm-pale);
+        border:1px solid var(--palm-light);border-radius:8px;color:var(--palm);
+        font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">Save</button>
+    </div>
+    <div id="pinSaveMsg" style="font-size:12px;color:var(--palm);margin-top:4px;min-height:16px"></div>
+  </div>
+  <div class="settings-sec">
+    <h3>Data</h3>
+    <div class="s-note">Reset all tick data. Config is preserved.</div>
+    <div class="s-row" style="border-color:var(--coral-pale)">
+      <label style="color:var(--coral)">Reset all tick data (cannot be undone)</label>
+      <button class="danger-btn" onclick="resetTicks()">Reset</button>
+    </div>
+  </div>`;
+}
+
+// ── SETTINGS HANDLERS ──
+function updChildName(i,v){ cfg.children[i].name=v; saveConfig(); render(); }
+function updChildBase(i,v){ cfg.children[i].base=parseFloat(v)||0; saveConfig(); render(); }
+function updTaskPct(i,v)  { cfg.tasks[i].pct=parseInt(v)||0; saveConfig(); render(); }
+function updPenPct(i,v)   { cfg.penalties[i].pct=parseInt(v)||0; saveConfig(); render(); }
+function updBonusCap(v)   { cfg.bonusCap=parseInt(v)||0; saveConfig(); render(); }
+function updPenaltyCap(v) { cfg.penaltyCap=parseInt(v)||0; saveConfig(); render(); }
+function savePin() {
+  const v = document.getElementById('newPinInput').value.trim();
+  if (!/^\d{4}$/.test(v)) { document.getElementById('pinSaveMsg').textContent='Must be exactly 4 digits'; return; }
+  cfg.pin = v;
+  saveConfig();
+  document.getElementById('pinSaveMsg').textContent = 'PIN updated ✓';
+  setTimeout(()=>{ const el=document.getElementById('pinSaveMsg'); if(el) el.textContent=''; },3000);
+}
+function resetTicks() {
+  if (confirm('Reset ALL tick data? Config and PIN are kept.')) {
+    ticks = {};
+    window._fbSet(dbRef('ticks'), null)
+      .then(()=>{ setSyncStatus('ok'); render(); })
+      .catch(()=>setSyncStatus('err'));
+  }
+}
+
+// ── WEEK NAV ──
+document.getElementById('prevWeek').addEventListener('click', ()=>{ weekOffset--; render(); });
+document.getElementById('nextWeek').addEventListener('click', ()=>{ if(weekOffset<0){ weekOffset++; render(); } });
+
+// ── BOOT ──
+if (window._fbReady) {
+  initFirebase();
+} else {
+  window.addEventListener('firebase-ready', initFirebase);
+  // Fallback timeout
+  setTimeout(()=>{
+    if (!cfg) {
+      document.getElementById('loading').innerHTML =
+        `<div style="text-align:center;padding:2rem;max-width:400px">
+          <h2 style="font-family:'Playfair Display',serif;color:var(--bark);margin-bottom:1rem">Firebase not configured</h2>
+          <p style="font-size:14px;color:var(--text-soft);line-height:1.7">
+            Open this file in a text editor and follow the setup instructions at the top of the file to connect Firebase.<br><br>
+            The setup takes about 5 minutes and is completely free.
+          </p>
+        </div>`;
+    }
+  }, 5000);
+}
+</script>
+
+
+</body></html>
