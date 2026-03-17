@@ -52,7 +52,7 @@
 <!-- ═══════════════════════════════════════════════ -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, set, get, onValue, update }
+  import { getDatabase, ref, set, get, onValue, update, remove }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
   const firebaseConfig = {
@@ -75,6 +75,7 @@
   window._fbGet   = get;
   window._fbOnValue = onValue;
   window._fbUpdate  = update;
+  window._fbRemove  = remove;
   window._fbReady = true;
   window.dispatchEvent(new Event('firebase-ready'));
 </script>
@@ -562,9 +563,17 @@ function initFirebase() {
     maybeRender();
   });
 
-  // Listen to ticks
+  // Listen to ticks — always treat Firebase as source of truth
+  // Filter out any null/false values that may have leaked in previously
   window._fbOnValue(dbRef('ticks'), snap => {
-    ticks = snap.exists() ? snap.val() : {};
+    if (snap.exists()) {
+      const raw = snap.val();
+      // Only keep genuinely true values
+      ticks = {};
+      Object.keys(raw).forEach(k => { if (raw[k] === true) ticks[k] = true; });
+    } else {
+      ticks = {};
+    }
     maybeRender();
   });
 }
@@ -590,8 +599,8 @@ function setSyncStatus(s) {
 function saveTick(key, val) {
   setSyncStatus('saving');
   const r = window._fbRef(window._fbDb, 'ticks/' + key);
-  window._fbSet(r, val ? true : null)
-    .then(() => setSyncStatus('ok'))
+  const op = val ? window._fbSet(r, true) : window._fbRemove(r);
+  op.then(() => setSyncStatus('ok'))
     .catch(err => {
       console.error('Firebase write error:', err.code, err.message);
       setSyncStatus('err');
@@ -653,8 +662,9 @@ function doToggle(ci, wo, day, tid) {
   if (!isParent) return;
   const k   = tickKey(ci, wo, day, tid);
   const val = !ticks[k];
-  ticks[k]  = val;
-  saveTick(k, val || null);
+  // Optimistic local update so UI feels instant
+  if (val) { ticks[k] = true; } else { delete ticks[k]; }
+  saveTick(k, val);
   render();
 }
 
